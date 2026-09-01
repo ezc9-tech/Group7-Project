@@ -26,3 +26,17 @@ Push the changes up to your remote branch:
 `git push -u origin <branch name>`
 
 Finally, navigate to GitHub and open a Pull Request against the `main` branch. Make sure to add proper documentation and details about your changes as requested.
+
+## How to run Frontend
+
+Firstly, change your main directory to frontend:
+`cd frontend`
+
+Then, install all dependencies:
+`npm i`
+
+Finally, run this and navigate to the localhost link it provides:
+`npm run dev`
+
+Ensure that if you push changes to the repository to run eslint beforehand:
+`npm run lint`
