@@ -40,3 +40,14 @@ Finally, run this and navigate to the localhost link it provides:
 
 Ensure that if you push changes to the repository to run eslint beforehand:
 `npm run lint`
+
+## How to run Backend
+
+Firstly, change your main directory to backend:
+`cd backend`
+
+Then, install all dependencies:
+`npm i`
+
+Finally, run this and navigate to the localhost link it provides:
+`npm run dev`
