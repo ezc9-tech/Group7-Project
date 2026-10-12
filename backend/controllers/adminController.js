@@ -4,5 +4,6 @@ import { approveUser } from "../routes/adminRoutes.js";
 const adminRoutes = Router()
 
 adminRoutes.post("/approve-user/:id", approveUser);
+adminRoutes.get("/unapproved-users", getUnapprovedUsers);
 
 export default adminRoutes;
