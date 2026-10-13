@@ -7,6 +7,13 @@ export async function getUnapprovedUsers(req, res) {
     try {
         const unapprovedUsers = await prisma.user.findMany({
             where: { approved: false },
+            include: {
+                login: {
+                    select: {
+                        email: true
+                    }
+                }
+            }
 
         })
 

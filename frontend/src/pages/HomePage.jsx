@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "../components/Navbar";
+import UserCard from "../components/UserCard";
+import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
 
 function HomePage() {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -112,100 +114,57 @@ function HomePage() {
 
   if (currentUser && currentUser.role !== "admin") {
     return (
-      <div>
+      <div className="bg-light min-vh-100">
         <Navbar />
-        <main className="under-construction">
-          <h1 className="construction-icon">🚧</h1>
-          <h2>Under Construction</h2>
-          <p className="construction-text">
-            The {currentUser.role} dashboard is currently being built.
-            Check back soon!
+        <Container className="text-center mt-5 pt-5">
+          <h1 className="display-1 mb-3">🚧</h1>
+          <h2 className="fw-bold">Under Construction</h2>
+          <p className="text-muted fs-5 mt-3">
+            The{" "}
+            <span className="text-capitalize fw-semibold">
+              {currentUser.role}
+            </span>{" "}
+            dashboard is currently being built. Check back soon!
           </p>
-        </main>
+        </Container>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="bg-light min-vh-100">
       <Navbar />
       <Toaster position="top-center" />
 
-      <main className="dashboard-container">
-        <h1>Admin Dashboard</h1>
-        <h2>Pending Account Approvals</h2>
+      <Container className="py-5">
+        <div className="mb-4">
+          <h1 className="fw-bold">Admin Dashboard</h1>
+          <h2 className="h4 text-muted">Pending Account Approvals</h2>
+        </div>
 
         {isLoading ? (
-          <p>Loading pending accounts...</p>
-        ) : pendingUsers.length === 0 ? (
-          <p>No accounts are currently waiting for approval.</p>
-        ) : (
-          <div className="users-card-grid">
-            {pendingUsers.map((user) => (
-              <div key={user.id} className="user-card">
-                <div className="user-card-header">
-                  <h3>
-                    {user.firstName} {user.lastName}
-                  </h3>
-                  <span className="role-badge">{user.role}</span>
-                </div>
-
-                <div className="user-card-body">
-                  <p>
-                    <strong>Email:</strong> {user.login?.email || user.email}
-                  </p>
-                  <p>
-                    <strong>Requested:</strong>{" "}
-                    {user.createdAt
-                      ? new Date(user.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </p>
-                </div>
-
-                <div className="user-card-actions">
-                  <button
-                    onClick={() => handleApprove(user.id)}
-                    className="approve-btn icon-btn"
-                    title="Approve User"
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDeny(user.id)}
-                    className="deny-btn icon-btn"
-                    title="Deny User"
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="text-center my-5">
+            <Spinner animation="border" variant="primary" role="status" />
+            <p className="mt-3 text-muted">Loading pending accounts...</p>
           </div>
+        ) : pendingUsers.length === 0 ? (
+          <Alert variant="info" className="text-center py-4 border-0 shadow-sm">
+            No accounts are currently waiting for approval.
+          </Alert>
+        ) : (
+          <Row xs={1} md={2} lg={3} className="g-4">
+            {pendingUsers.map((user) => (
+              <Col key={user.id}>
+                <UserCard
+                  user={user}
+                  onApprove={handleApprove}
+                  onDeny={handleDeny}
+                />
+              </Col>
+            ))}
+          </Row>
         )}
-      </main>
+      </Container>
     </div>
   );
 }
