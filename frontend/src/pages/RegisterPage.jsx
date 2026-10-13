@@ -31,12 +31,12 @@ function RegisterPage() {
         body: JSON.stringify({
           email: data.email,
           password: data.password,
-          user_type: data.role,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone_number: data.phone_number,
+          role: data.role,
+          firstName: data.first_name,
+          lastName: data.last_name,
+          phoneNumber: data.phone_number,
           address: data.address,
-          date_of_birth: data.date_of_birth,
+          dateOfBirth: data.date_of_birth,
         }),
       });
 

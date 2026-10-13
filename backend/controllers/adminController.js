@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { approveUser } from "../routes/adminRoutes.js";
+import { approveUser, getUnapprovedUsers } from "../routes/adminRoutes.js";
 
 const adminRoutes = Router()
 
-adminRoutes.post("/approve-user/:id", approveUser);
+adminRoutes.patch("/approve-user/:id", approveUser);
 adminRoutes.get("/unapproved-users", getUnapprovedUsers);
 
 export default adminRoutes;

@@ -30,14 +30,14 @@ function HomePage() {
         return;
       }
 
-      if (currentUser.user_type !== "admin") {
+      if (currentUser.role !== "admin") {
         setIsLoading(false);
         return;
       }
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/admin/pending-users",
+          "http://localhost:3000/api/admin/unapproved-users",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -50,7 +50,7 @@ function HomePage() {
         }
 
         const data = await response.json();
-        setPendingUsers(data.users);
+        setPendingUsers(data.unapprovedUsers || []);
       } catch (error) {
         toast.error(error.message);
       } finally {
@@ -65,9 +65,9 @@ function HomePage() {
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:3000/api/admin/approve/${userId}`,
+        `http://localhost:3000/api/admin/approve-user/${userId}`,
         {
-          method: "PUT",
+          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -110,7 +110,7 @@ function HomePage() {
     }
   };
 
-  if (currentUser && currentUser.user_type !== "admin") {
+  if (currentUser && currentUser.role !== "admin") {
     return (
       <div>
         <Navbar />
@@ -118,7 +118,7 @@ function HomePage() {
           <h1 className="construction-icon">🚧</h1>
           <h2>Under Construction</h2>
           <p className="construction-text">
-            The {currentUser.user_type} dashboard is currently being built.
+            The {currentUser.role} dashboard is currently being built.
             Check back soon!
           </p>
         </main>
@@ -140,45 +140,70 @@ function HomePage() {
         ) : pendingUsers.length === 0 ? (
           <p>No accounts are currently waiting for approval.</p>
         ) : (
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Requested On</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    {user.first_name} {user.last_name}
-                  </td>
-                  <td>{user.login?.email}</td>
-                  <td>
-                    <span className="role-badge">{user.user_type}</span>
-                  </td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td className="table-actions">
-                    <button
-                      onClick={() => handleApprove(user.id)}
-                      className="approve-btn"
+          <div className="users-card-grid">
+            {pendingUsers.map((user) => (
+              <div key={user.id} className="user-card">
+                <div className="user-card-header">
+                  <h3>
+                    {user.firstName} {user.lastName}
+                  </h3>
+                  <span className="role-badge">{user.role}</span>
+                </div>
+
+                <div className="user-card-body">
+                  <p>
+                    <strong>Email:</strong> {user.login?.email || user.email}
+                  </p>
+                  <p>
+                    <strong>Requested:</strong>{" "}
+                    {user.createdAt
+                      ? new Date(user.createdAt).toLocaleDateString()
+                      : "N/A"}
+                  </p>
+                </div>
+
+                <div className="user-card-actions">
+                  <button
+                    onClick={() => handleApprove(user.id)}
+                    className="approve-btn icon-btn"
+                    title="Approve User"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleDeny(user.id)}
-                      className="deny-btn"
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => handleDeny(user.id)}
+                    className="deny-btn icon-btn"
+                    title="Deny User"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      Deny
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </main>
     </div>
