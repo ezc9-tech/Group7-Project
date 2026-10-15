@@ -39,8 +39,26 @@ function LoginPage() {
 
       toast.success("Logged in successfully!");
 
+      const userRole = result.user.role;
+
+      let destination = "/";
+
+      switch (userRole) {
+        case "admin":
+          destination = "/admin-dashboard";
+          break;
+        case "manager":
+          destination = "/manager-dashboard";
+          break;
+        case "user":
+          destination = "/user-profile";
+          break;
+        default:
+          destination = "/"; 
+      }
+
       setTimeout(() => {
-        navigate("/");
+        navigate(destination);
       }, 1000);
     } catch (err) {
       toast.error(err.message);

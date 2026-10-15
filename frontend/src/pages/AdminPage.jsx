@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import UserCard from "../components/UserCard";
 import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
 
-function HomePage() {
+function AdminPage() {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -112,24 +112,6 @@ function HomePage() {
     }
   };
 
-  if (currentUser && currentUser.role !== "admin") {
-    return (
-      <div className="bg-light min-vh-100">
-        <Navbar />
-        <Container className="text-center mt-5 pt-5">
-          <h1 className="display-1 mb-3">🚧</h1>
-          <h2 className="fw-bold">Under Construction</h2>
-          <p className="text-muted fs-5 mt-3">
-            The{" "}
-            <span className="text-capitalize fw-semibold">
-              {currentUser.role}
-            </span>{" "}
-            dashboard is currently being built. Check back soon!
-          </p>
-        </Container>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-light min-vh-100">
@@ -169,4 +151,4 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default AdminPage;
