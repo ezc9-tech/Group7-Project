@@ -3,17 +3,18 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import UserCard from "../components/UserCard";
+import ProductCard from "../components/ProductCard";
 import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
 
 function AdminPage() {
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [pendingProducts, setPendingProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   const [currentUser] = useState(() => {
     const userString = localStorage.getItem("user");
     if (!userString) return null;
-
     try {
       return JSON.parse(userString);
     } catch {
@@ -24,7 +25,7 @@ function AdminPage() {
   });
 
   useEffect(() => {
-    const fetchPendingUsers = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem("token");
 
       if (!token || !currentUser) {
@@ -33,26 +34,32 @@ function AdminPage() {
       }
 
       if (currentUser.role !== "admin") {
-        setIsLoading(false);
+        toast.error("Unauthorized access.");
+        navigate("/");
         return;
       }
 
       try {
-        const response = await fetch(
-          "http://localhost:3000/api/admin/unapproved-users",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        const headers = { Authorization: `Bearer ${token}` };
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch pending users");
+        const [usersRes, productsRes] = await Promise.all([
+          fetch("http://localhost:3000/api/admin/unapproved-users", {
+            headers,
+          }),
+          fetch("http://localhost:3000/api/admin/unapproved-products", {
+            headers,
+          }),
+        ]);
+
+        if (!usersRes.ok || !productsRes.ok) {
+          throw new Error("Failed to fetch pending data");
         }
 
-        const data = await response.json();
-        setPendingUsers(data.unapprovedUsers || []);
+        const usersData = await usersRes.json();
+        const productsData = await productsRes.json();
+
+        setPendingUsers(usersData.unapprovedUsers || []);
+        setPendingProducts(productsData.unapprovedProducts || []);
       } catch (error) {
         toast.error(error.message);
       } finally {
@@ -60,22 +67,19 @@ function AdminPage() {
       }
     };
 
-    fetchPendingUsers();
+    fetchData();
   }, [navigate, currentUser]);
 
-  const handleApprove = async (userId) => {
+  const handleApproveUser = async (userId) => {
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
         `http://localhost:3000/api/admin/approve-user/${userId}`,
         {
           method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
-
       if (!response.ok) throw new Error("Failed to approve user");
 
       toast.success("User approved successfully!");
@@ -85,24 +89,20 @@ function AdminPage() {
     }
   };
 
-  const handleDeny = async (userId) => {
+  const handleDenyUser = async (userId) => {
     if (
       !window.confirm("Are you sure you want to deny and delete this account?")
     )
       return;
-
     const token = localStorage.getItem("token");
     try {
       const response = await fetch(
         `http://localhost:3000/api/admin/deny/${userId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
-
       if (!response.ok) throw new Error("Failed to deny user");
 
       toast.success("User denied and removed.");
@@ -112,6 +112,51 @@ function AdminPage() {
     }
   };
 
+  const handleApproveProduct = async (productId) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/admin/approve-product/${productId}`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!response.ok) throw new Error("Failed to approve product");
+
+      toast.success("Product approved successfully!");
+      setPendingProducts(
+        pendingProducts.filter((prod) => prod.id !== productId),
+      );
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDenyProduct = async (productId) => {
+    if (
+      !window.confirm("Are you sure you want to deny and delete this product?")
+    )
+      return;
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/admin/deny-product/${productId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!response.ok) throw new Error("Failed to deny product");
+
+      toast.success("Product denied and removed.");
+      setPendingProducts(
+        pendingProducts.filter((prod) => prod.id !== productId),
+      );
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="bg-light min-vh-100">
@@ -119,32 +164,60 @@ function AdminPage() {
       <Toaster position="top-center" />
 
       <Container className="py-5">
-        <div className="mb-4">
+        <div className="mb-5 border-bottom pb-3">
           <h1 className="fw-bold">Admin Dashboard</h1>
-          <h2 className="h4 text-muted">Pending Account Approvals</h2>
+          <p className="text-muted">Manage approvals</p>
         </div>
 
         {isLoading ? (
           <div className="text-center my-5">
             <Spinner animation="border" variant="primary" role="status" />
-            <p className="mt-3 text-muted">Loading pending accounts...</p>
+            <p className="mt-3 text-muted">Loading pending approvals...</p>
           </div>
-        ) : pendingUsers.length === 0 ? (
-          <Alert variant="info" className="text-center py-4 border-0 shadow-sm">
-            No accounts are currently waiting for approval.
-          </Alert>
         ) : (
-          <Row xs={1} md={2} lg={3} className="g-4">
-            {pendingUsers.map((user) => (
-              <Col key={user.id}>
-                <UserCard
-                  user={user}
-                  onApprove={handleApprove}
-                  onDeny={handleDeny}
-                />
-              </Col>
-            ))}
-          </Row>
+          <>
+            <section className="mb-5">
+              <h3 className="h4 mb-4">Pending Accounts</h3>
+              {pendingUsers.length === 0 ? (
+                <Alert variant="info" className="border-0 shadow-sm">
+                  No accounts waiting for approval.
+                </Alert>
+              ) : (
+                <Row xs={1} md={2} lg={3} className="g-4">
+                  {pendingUsers.map((user) => (
+                    <Col key={user.id}>
+                      <UserCard
+                        user={user}
+                        onApprove={handleApproveUser}
+                        onDeny={handleDenyUser}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              )}
+            </section>
+
+            <section>
+              <h3 className="h4 mb-4">Pending Products</h3>
+              {pendingProducts.length === 0 ? (
+                <Alert variant="info" className="border-0 shadow-sm">
+                  No products waiting for approval.
+                </Alert>
+              ) : (
+                <Row xs={1} md={2} lg={3} className="g-4">
+                  {pendingProducts.map((product) => (
+                    <Col key={product.id}>
+                      <ProductCard
+                        product={product}
+                        onApprove={handleApproveProduct}
+                        onDeny={handleDenyProduct}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              )}
+            </section>
+          </>
         )}
       </Container>
     </div>
